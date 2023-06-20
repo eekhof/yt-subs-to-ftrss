@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# Get source code of subscribed channel list from "https://www.youtube.com/feed/channels" (scroll all the way down to load all entries), and put it into file "data", the extracted Channel IDs will then be listed in "ids"
+# CAUTION: DOES ONLY EXTRACT UP TO 99, but this is because the Youtube page only yields 99 in the source code
+
+read -p "Enter your full YouTube RSS URL (e.g. ftrss.johnsmith.com): " FTRSS_URL
+
+grep -Po '"subscribeEndpoint":{"channelIds":\["\K[[:alnum:]_\-]*(?="\])' data > ids
+
+grep -Po '"title":{"simpleText":"\K.*?(?=")' data > names
+
+paste ids names > total
+
+cat total
+echo "-- Total entries: --"
+cat total | wc -l
+
+leftend="https://$FTRSS_URL/makefulltextfeed.php?url=sec%3A%2F%2Fwww.youtube.com%2Ffeeds%2Fvideos.xml%3Fchannel_id%3D"
+rightend="&max=15&links=preserve&exc=&submit=Create+Feed"
+
+echo "" > feedlinks
+input="ids"
+while IFS= read -r line
+do
+  echo "$leftend$line$rightend" >> feedlinks
+done < "$input"
